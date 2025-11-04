@@ -1,0 +1,16 @@
+{% extends 'downloader/base.html' %}
+
+{% block content %}
+    <h2>Вхід в акаунт</h2>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        {% if form.errors %}
+            <p style="color: #dc3545;">Неправильне ім'я користувача або пароль.</p>
+        {% endif %}
+
+        {{ form.as_p }} 
+        <button type="submit" class="btn">Увійти</button>
+    </form>
+{% endblock %}

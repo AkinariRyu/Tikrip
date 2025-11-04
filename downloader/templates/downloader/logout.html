@@ -1,0 +1,7 @@
+{% extends 'downloader/base.html' %}
+
+{% block content %}
+    <h2>Ви вийшли з системи</h2>
+    <p>Дякуємо, що користувалися нашим сервісом!</p>
+    <a href="{% url 'login' %}" class="btn">Увійти знову</a>
+{% endblock %}

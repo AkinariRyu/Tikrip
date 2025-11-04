@@ -1,0 +1,17 @@
+{% extends 'downloader/base.html' %}
+
+{% block content %}
+    <h2>Завантажувач відео з TikTok</h2>
+    <p>Вставте посилання на відео, щоб завантажити його без водяного знаку.</p>
+    
+    <form method="GET" action="{% url 'home' %}">
+        <input type="url" name="url" placeholder="https://www.tiktok.com/..." required>
+        <br>
+        <button type="submit" class="btn">Завантажити</button>
+    </form>
+    
+    {% if not user.is_authenticated %}
+    <hr>
+    <p><strong>Примітка:</strong> <a href="{% url 'login' %}">Увійдіть</a> або <a href="{% url 'register' %}">зареєструйтеся</a>, щоб бачити історію своїх завантажень в особистому кабінеті.</p>
+    {% endif %}
+{% endblock %}

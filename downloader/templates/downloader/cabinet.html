@@ -1,0 +1,24 @@
+{% extends 'downloader/base.html' %}
+
+{% block content %}
+    <h2>Вітаємо, {{ user.username }}!</h2>
+    <p>Це ваш особистий кабінет. Тут зберігається історія ваших завантажень.</p>
+    <hr>
+    <h3>Ваша історія:</h3>
+    
+    {% if history %}
+        <ul class="history-list">
+            {% for item in history %}
+                <li class="history-item">
+                    <strong>{{ item.video_title|default:"Відео без назви" }}</strong>
+                    <br>
+                    <a href="{{ item.tiktok_url }}" target="_blank">Переглянути в TikTok</a>
+                    <small>{{ item.download_date }}</small>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Ви ще нічого не завантажували. Спробуйте на <a href="{% url 'home' %}">головній сторінці</a>!</p>
+    {% endif %}
+
+{% endblock %}

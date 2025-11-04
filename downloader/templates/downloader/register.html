@@ -1,0 +1,11 @@
+{% extends 'downloader/base.html' %}
+
+{% block content %}
+    <h2>Реєстрація нового користувача</h2>
+    <p>Створіть акаунт, щоб зберігати історію завантажень.</p>
+    <hr>
+    <form method="post">
+        {% csrf_token %} 
+        {{ form.as_p }} <button type="submit" class="btn">Зареєструватися</button>
+    </form>
+{% endblock %}

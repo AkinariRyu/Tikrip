@@ -37,7 +37,7 @@ Clone the repository:
 
 Bash
 
-git clone https://github.com/YOUR_USERNAME/TIKRIP.git
+git clone https://github.com/AkinariRyu/TIKRIP.git
 cd TIKRIP
 Create and activate a virtual environment:
 

@@ -1,17 +1,52 @@
 {% extends 'downloader/base.html' %}
+{% load i18n %}
 
 {% block content %}
-    <h2>Завантажувач відео з TikTok</h2>
-    <p>Вставте посилання на відео, щоб завантажити його без водяного знаку.</p>
+
+<div class="home-wrapper">
+
+    <h1 style="font-size: 3.5rem; margin: 0 0 10px 0; line-height: 1;">
+        <span style="color:white;">TikTok</span>
+        <span style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Downloader</span>
+    </h1>
     
-    <form method="GET" action="{% url 'home' %}">
-        <input type="url" name="url" placeholder="https://www.tiktok.com/..." required>
+    <p style="color: var(--text-muted); font-size: 1.2rem; margin-bottom: 40px;">
+        {% trans "Завантажуй без водяного знаку. Швидко. Безкоштовно." %}
+    </p>
+
+    <form method="GET" action="{% url 'home' %}" style="width: 100%; max-width: 600px;">
+        
+        <input type="url" name="url" placeholder="{% trans 'Вставте посилання тут...' %}" required autocomplete="off">
+        
         <br>
-        <button type="submit" class="btn">Завантажити</button>
+        
+        <button type="submit" class="btn">
+            {% trans "ЗАВАНТАЖИТИ" %}
+        </button>
+
+        <div id="loading-spinner" class="loader"></div>
+        <p id="loading-text" style="display:none; color: var(--text-muted); margin-top:10px;">
+            {% trans "Обробка відео..." %}
+        </p>
     </form>
-    
+
     {% if not user.is_authenticated %}
-    <hr>
-    <p><strong>Примітка:</strong> <a href="{% url 'login' %}">Увійдіть</a> або <a href="{% url 'register' %}">зареєструйтеся</a>, щоб бачити історію своїх завантажень в особистому кабінеті.</p>
+        <div style="margin-top: 60px; opacity: 0.6;">
+            <p style="margin-bottom: 10px; font-size: 0.9rem;">{% trans "Хочете зберегти історію?" %}</p>
+            <a href="{% url 'register' %}" style="color: var(--accent-blue); text-decoration: none; border-bottom: 1px dashed var(--accent-blue);">
+                {% trans "Створити акаунт" %}
+            </a>
+        </div>
     {% endif %}
+
+</div>
+
+<script>
+    document.querySelector('form').addEventListener('submit', function() {
+        document.getElementById('loading-spinner').style.display = 'block';
+        document.getElementById('loading-text').style.display = 'block';
+        this.querySelector('button').style.display = 'none'; // Ховаємо кнопку, показуємо спіннер
+    });
+</script>
+
 {% endblock %}

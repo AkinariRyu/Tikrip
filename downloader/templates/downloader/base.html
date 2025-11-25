@@ -1,35 +1,59 @@
-{% load static %} <!DOCTYPE html>
+{% load static %}
+{% load i18n %}
+
+<!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TikRip Downloader</title>
-    
+    <title>TikRip</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
 
-    <header class="navbar">
+    <nav class="navbar">
         <div class="container nav-content">
-            <a href="{% url 'home' %}" class="nav-logo">TikRip</a>
+            <a href="{% url 'home' %}" class="logo">
+                <span class="logo-tik">Tik</span><span class="logo-rip">Rip</span>
+            </a>
+            
             <div class="nav-links">
+                <form action="{% url 'set_language' %}" method="post" style="display: inline-block;">
+                    {% csrf_token %}
+                    <input name="next" type="hidden" value="{{ redirect_to }}">
+                    <select name="language" onchange="this.form.submit()" style="background:none; width:auto; padding:5px; border:none; color:#a0a0a0; cursor:pointer; text-align:left;">
+                        {% get_current_language as LANGUAGE_CODE %}
+                        {% get_available_languages as LANGUAGES %}
+                        {% for lang in LANGUAGES %}
+                            <option value="{{ lang.0 }}" {% if lang.0 == LANGUAGE_CODE %}selected{% endif %} style="color:black;">
+                                {{ lang.0|upper }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </form>
+
                 {% if user.is_authenticated %}
-                    <a href="{% url 'cabinet' %}">Кабінет ({{ user.username }})</a>
-                    <a href="{% url 'logout' %}">Вийти</a>
-                
+                    <a href="{% url 'cabinet' %}">{% trans "Кабінет" %}</a>
+                    <a href="{% url 'logout' %}">{% trans "Вийти" %}</a>
                 {% else %}
-                    <a href="{% url 'login' %}">Увійти</a>
-                    <a href="{% url 'register' %}">Реєстрація</a>
+                    <a href="{% url 'login' %}">{% trans "Вхід" %}</a>
                 {% endif %}
             </div>
         </div>
-    </header>
+    </nav>
 
     <main class="container">
-        <div class="card">
-            {% block content %}
-            {% endblock %}
-        </div>
+        {% if messages %}
+            <div style="margin-top: 20px;">
+                {% for message in messages %}
+                    <div class="alert-error">
+                        ⚠️ {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% block content %}
+        {% endblock %}
     </main>
 
 </body>

@@ -169,3 +169,12 @@ msgstr "Could not find a link to the video file."
 
 msgid "Сталася технічна помилка при завантаженні."
 msgstr "A technical error occurred during download."
+
+msgid "Спробуй наш Telegram Bot!"
+msgstr "Try our Telegram Bot!"
+
+msgid "Качай відео прямо в месенджері."
+msgstr "Download videos directly in messenger."
+
+msgid "Відкрити в Telegram"
+msgstr "Open in Telegram"

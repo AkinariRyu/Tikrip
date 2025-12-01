@@ -1,0 +1,36 @@
+{% extends 'downloader/base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 40px auto;">
+    <div class="card">
+        <h2 style="text-align: center; margin-bottom: 10px;">{% trans "Приєднатися" %} 🚀</h2>
+        <p style="text-align: center; color: var(--text-muted); margin-bottom: 30px;">
+            {% trans "Створіть акаунт для збереження історії." %}
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            
+            {% for field in form %}
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-muted);">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small style="color: #666; display: block; margin-top: 5px;">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <small style="color: var(--accent-pink);">{{ error }}</small>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+
+            <button type="submit" class="btn" style="width: 100%;">{% trans "Створити акаунт" %}</button>
+        </form>
+
+        <p style="text-align: center; margin-top: 20px; color: var(--text-muted);">
+            {% trans "Вже є акаунт?" %} <a href="{% url 'login' %}" style="color: var(--accent-blue);">{% trans "Увійти" %}</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

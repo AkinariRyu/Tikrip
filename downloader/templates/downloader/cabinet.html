@@ -1,0 +1,44 @@
+{% extends 'downloader/base.html' %}
+{% load i18n %}
+
+{% block content %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <div>
+            <h2 style="margin: 0;">{% blocktrans with username=user.username %}Hello, {{ username }} 👋{% endblocktrans %}</h2>
+            <p style="color: var(--text-muted); margin: 5px 0 0 0;">{% trans "Ваша особиста колекція" %}</p>
+        </div>
+        
+        <div style="text-align: right; background: rgba(0, 242, 234, 0.1); padding: 10px 20px; border-radius: 12px; border: 1px solid var(--accent-blue);">
+            <span style="display: block; font-size: 0.8rem; color: var(--accent-blue);">{% trans "ЗАВАНТАЖЕНО" %}</span>
+            <span style="font-size: 1.5rem; font-weight: 800; color: #fff;">{{ total_downloads }}</span>
+        </div>
+    </div>
+
+    {% if history %}
+        <div class="history-list">
+            {% for item in history %}
+                <div class="history-item">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">
+                            @{{ item.video.author.username }}
+                        </span>
+                        <small>{{ item.download_date|date:"d.m" }}</small>
+                    </div>
+
+                    <h3 style="font-size: 1rem; margin: 10px 0; height: 40px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                        {{ item.video.title|default:"No Title" }}
+                    </h3>
+
+                    <a href="{{ item.video.original_url }}" target="_blank" class="btn" style="width: 100%; box-sizing: border-box; font-size: 0.9rem; padding: 10px; margin-top: 10px; background: transparent; border: 1px solid var(--accent-pink); color: var(--accent-pink);">
+                        ▶ {% trans "Дивитись в TikTok" %}
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 50px; border: 2px dashed var(--border-color); border-radius: 20px;">
+            <p style="color: var(--text-muted);">{% trans "Тут поки що порожньо..." %}</p>
+            <a href="{% url 'home' %}" class="btn">{% trans "Завантажити перше відео" %}</a>
+        </div>
+    {% endif %}
+{% endblock %}

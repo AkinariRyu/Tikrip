@@ -1,0 +1,68 @@
+{% extends 'downloader/base.html' %}
+{% load i18n %}
+{% load static %} {% block content %}
+
+<div class="home-wrapper">
+
+    <h1 style="font-size: 3.5rem; margin: 0 0 10px 0; line-height: 1;">
+        <span style="color:white;">TikTok</span>
+        <span style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Downloader</span>
+    </h1>
+    
+    <p style="color: var(--text-muted); font-size: 1.2rem; margin-bottom: 40px;">
+        {% trans "Завантажуй без водяного знаку. Швидко. Безкоштовно." %}
+    </p>
+
+    <form method="GET" action="{% url 'home' %}" style="width: 100%; max-width: 600px;">
+        
+        <input type="url" name="url" placeholder="{% trans 'Вставте посилання тут...' %}" required autocomplete="off">
+        
+        <br>
+        
+        <button type="submit" class="btn">
+            {% trans "ЗАВАНТАЖИТИ" %}
+        </button>
+
+        <div id="loading-spinner" class="loader"></div>
+        <p id="loading-text" style="display:none; color: var(--text-muted); margin-top:10px;">
+            {% trans "Обробка відео..." %}
+        </p>
+    </form>
+
+    <div style="margin-top: 40px; display: flex; align-items: center; background: rgba(0, 136, 204, 0.1); padding: 15px 25px; border-radius: 15px; border: 1px solid rgba(0, 136, 204, 0.3); max-width: 500px;">
+        
+        <div style="margin-right: 20px;">
+            <img src="{% static 'img/bot-qr.png' %}" alt="Bot QR" style="width: 80px; height: 80px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.2);">
+        </div>
+
+        <div style="text-align: left;">
+            <h3 style="margin: 0 0 5px 0; color: #fff; font-size: 1.1rem;">{% trans "Спробуй наш Telegram Bot!" %}</h3>
+            <p style="margin: 0 0 10px 0; color: var(--text-muted); font-size: 0.85rem; line-height: 1.3;">
+                {% trans "Качай відео прямо в месенджері." %}
+            </p>
+            
+            <a href="https://t.me/TikRip_Downloader_Bot" target="_blank" style="color: #0088cc; text-decoration: none; font-weight: bold; font-size: 0.9rem;">
+                {% trans "Відкрити в Telegram" %}
+            </a>
+        </div>
+    </div>
+    {% if not user.is_authenticated %}
+        <div style="margin-top: 40px; opacity: 0.6;">
+            <p style="margin-bottom: 5px; font-size: 0.9rem;">{% trans "Хочете зберегти історію?" %}</p>
+            <a href="{% url 'register' %}" style="color: var(--accent-blue); text-decoration: none; border-bottom: 1px dashed var(--accent-blue);">
+                {% trans "Створити акаунт" %}
+            </a>
+        </div>
+    {% endif %}
+
+</div>
+
+<script>
+    document.querySelector('form').addEventListener('submit', function() {
+        document.getElementById('loading-spinner').style.display = 'block';
+        document.getElementById('loading-text').style.display = 'block';
+        this.querySelector('button').style.display = 'none'; // Ховаємо кнопку, показуємо спіннер
+    });
+</script>
+
+{% endblock %}

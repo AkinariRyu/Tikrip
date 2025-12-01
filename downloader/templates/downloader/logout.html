@@ -1,0 +1,12 @@
+{% extends 'downloader/base.html' %}
+{% load i18n %}
+
+{% block content %}
+    <h2>{% trans "Ви вийшли з системи" %}</h2>
+    <p>{% trans "Дякуємо, що користувалися нашим сервісом!" %}</p>
+    
+    <div style="margin-top: 20px;">
+        <a href="{% url 'login' %}" class="btn">{% trans "Увійти знову" %}</a>
+        <a href="{% url 'home' %}" class="btn" style="background-color: #6c757d; margin-left: 10px;">{% trans "На головну" %}</a>
+    </div>
+{% endblock %}

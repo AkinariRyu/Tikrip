@@ -1,0 +1,180 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: TikRip 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-11-25 22:00+0000\n"
+"PO-Revision-Date: 2025-11-25 22:05+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# --- NAVBAR ---
+msgid "Кабінет"
+msgstr "Cabinet"
+
+msgid "Вийти"
+msgstr "Logout"
+
+msgid "Вхід"
+msgstr "Login"
+
+msgid "Увійти"
+msgstr "Log In"
+
+# --- HOME PAGE ---
+msgid "Завантажуй без водяного знаку. Швидко. Безкоштовно."
+msgstr "Download without watermark. Fast. Free."
+
+msgid "Вставте посилання тут..."
+msgstr "Paste link here..."
+
+msgid "ЗАВАНТАЖИТИ"
+msgstr "DOWNLOAD"
+
+msgid "Обробка відео..."
+msgstr "Processing video..."
+
+msgid "Хочете зберегти історію?"
+msgstr "Want to save history?"
+
+msgid "Створити акаунт"
+msgstr "Create account"
+
+msgid "Завантажити Video"
+msgstr "Download Video"
+
+msgid "Завантажуйте відео без водяного знаку за секунди."
+msgstr "Download videos without watermarks in seconds."
+
+msgid "Вставте посилання на TikTok..."
+msgstr "Paste TikTok link..."
+
+msgid "Обробка..."
+msgstr "Processing..."
+
+# --- CABINET ---
+msgid "Ваша статистика:"
+msgstr "Your Statistics:"
+
+msgid "Завантажено відео:"
+msgstr "Videos downloaded:"
+
+msgid "Ваша особиста колекція"
+msgstr "Your personal collection"
+
+msgid "ЗАВАНТАЖЕНО"
+msgstr "DOWNLOADED"
+
+msgid "Дивитись в TikTok"
+msgstr "Watch on TikTok"
+
+msgid "Тут поки що порожньо..."
+msgstr "It's empty here for now..."
+
+msgid "Завантажити перше відео"
+msgstr "Download first video"
+
+msgid "Ваша історія:"
+msgstr "Your History:"
+
+msgid "Переглянути в TikTok"
+msgstr "View on TikTok"
+
+msgid "Ви ще нічого не завантажували. Спробуйте на"
+msgstr "You haven't downloaded anything yet. Try on the"
+
+msgid "головній сторінці"
+msgstr "home page"
+
+#, python-format
+msgid "Hello, %(username)s 👋"
+msgstr "Hello, %(username)s 👋"
+
+#, python-format
+msgid "Вітаємо, %(username)s!"
+msgstr "Welcome, %(username)s!"
+
+# --- LOGIN / REGISTER ---
+msgid "Вхід в систему"
+msgstr "System Login"
+
+msgid "Невірний логін або пароль."
+msgstr "Invalid username or password."
+
+msgid "Немає акаунту?"
+msgstr "No account?"
+
+msgid "Зареєструватись"
+msgstr "Sign up"
+
+msgid "Приєднатися"
+msgstr "Join us"
+
+msgid "Створіть акаунт для збереження історії."
+msgstr "Create an account to save history."
+
+msgid "Вже є акаунт?"
+msgstr "Already have an account?"
+
+msgid "Реєстрація нового користувача"
+msgstr "New user registration"
+
+msgid "Зареєструватися"
+msgstr "Register"
+
+msgid "Вхід в акаунт"
+msgstr "Account Login"
+
+msgid "Неправильне ім'я користувача або пароль."
+msgstr "Invalid username or password."
+
+# --- LOGOUT ---
+msgid "До зустрічі!"
+msgstr "See you soon!"
+
+msgid "Ви успішно вийшли з системи."
+msgstr "You have successfully logged out."
+
+msgid "Увійти знову"
+msgstr "Login again"
+
+msgid "На головну"
+msgstr "Home"
+
+msgid "Ви вийшли з системи"
+msgstr "You logged out"
+
+msgid "Дякуємо, що користувалися нашим сервісом!"
+msgstr "Thank you for using our service!"
+
+# --- PYTHON MESSAGES (views.py) ---
+msgid "Це посилання на фото-галерею. Цей сервіс завантажує тільки відео."
+msgstr "This is a photo gallery link. This service downloads videos only."
+
+msgid "API ключ не знайдено."
+msgstr "API key not found."
+
+msgid "Не вдалося отримати дані. Перевірте посилання."
+msgstr "Failed to retrieve data. Check the link."
+
+msgid "Вибачте, завантаження фото-слайдшоу поки не підтримується."
+msgstr "Sorry, photo slideshow download is not supported yet."
+
+msgid "Не вдалося знайти посилання на відеофайл."
+msgstr "Could not find a link to the video file."
+
+msgid "Сталася технічна помилка при завантаженні."
+msgstr "A technical error occurred during download."
+
+msgid "Спробуй наш Telegram Bot!"
+msgstr "Try our Telegram Bot!"
+
+msgid "Качай відео прямо в месенджері."
+msgstr "Download videos directly in messenger."
+
+msgid "Відкрити в Telegram"
+msgstr "Open in Telegram"

@@ -1,19 +1,14 @@
 # downloader/views.py
-
 import os
 import requests
 from dotenv import load_dotenv
-
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
-from django.contrib import messages
-from django.contrib.auth import logout
+from django.http import StreamingHttpResponse
 from django.contrib.auth.decorators import login_required
-from django.utils.translation import gettext as _ 
-
+from django.contrib.auth import logout
+from django.utils.translation import gettext as _
 from .forms import CustomUserCreationForm
-# Імпортуємо всі три моделі
-from .models import DownloadHistory, TikTokAuthor, TikTokVideo
+from .models import DownloadHistory, TikTokAuthor, TikTokVideo, UserProfile
 
 load_dotenv()
 
@@ -21,10 +16,8 @@ API_KEY = os.getenv("RAPID_API_KEY")
 API_HOST = os.getenv("RAPID_API_HOST")
 API_URL = os.getenv("RAPID_API_URL")
 
-# --- РЕЄСТРАЦІЯ ---
 def register_view(request):
-    if request.user.is_authenticated:
-        return redirect('cabinet')
+    if request.user.is_authenticated: return redirect('cabinet')
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
@@ -34,118 +27,94 @@ def register_view(request):
         form = CustomUserCreationForm()
     return render(request, 'downloader/register.html', {'form': form})
 
-# --- ГОЛОВНА ЛОГІКА ---
 def home_view(request):
     video_url = request.GET.get('url')
+    fmt = request.GET.get('format', 'video')
+    
+    if not video_url:
+        return render(request, 'downloader/home.html', {})
 
-    if video_url:
-        # Перевірка на фото-галерею
-        if "/photo/" in video_url:
-            messages.error(request, _("Це посилання на фото-галерею. Цей сервіс завантажує тільки відео."))
-            return render(request, 'downloader/home.html')
+    if "/photo/" in video_url:
+        return render(request, 'downloader/home.html', {'error': _("Це слайдшоу. Тільки відео!")})
 
-        if not API_KEY:
-            messages.error(request, _("API ключ не знайдено."))
-            return render(request, 'downloader/home.html')
+    try:
+        # API Request
+        querystring = {"url": video_url}
+        headers = {"x-rapidapi-key": API_KEY, "x-rapidapi-host": API_HOST}
+        response = requests.get(API_URL, headers=headers, params=querystring, timeout=20)
+        data = response.json()
 
-        try:
-            querystring = {"url": video_url}
-            headers = {
-                "x-rapidapi-key": API_KEY,
-                "x-rapidapi-host": API_HOST
-            }
+        if "video" not in data and "hdplay" not in data:
+            return render(request, 'downloader/home.html', {'error': _("Відео не знайдено.")})
 
-            response = requests.get(API_URL, headers=headers, params=querystring)
-            data = response.json()
+        # --- ЛОГІКА ВИБОРУ ЯКОСТІ (HD) ---
+        dl_link = None
+        filename = "tiktok_video.mp4"
+        content_type = "video/mp4"
 
-            # Перевіряємо відповідь API
-            if "video" not in data:
-                messages.error(request, _("Не вдалося отримати дані. Перевірте посилання."))
-                return render(request, 'downloader/home.html')
+        if fmt == 'audio':
+            # Для музики беремо найкращий бітрейт, якщо доступний
+            m_list = data.get("music", [])
+            # Перевірка різних ключів для музики
+            dl_link = data.get("music_info", {}).get("play") or (m_list[0] if isinstance(m_list, list) and m_list else str(m_list))
+            filename = "audio.mp3"
+            content_type = "audio/mpeg"
+        else:
+            # Пріоритет: HD > Standard > List[0]
+            dl_link = data.get("hdplay") or data.get("play")
+            if not dl_link and "video" in data:
+                dl_link = data["video"][0] if isinstance(data["video"], list) else data["video"]
 
-            # Отримуємо посилання на відео
-            video_list = data["video"]
-            if isinstance(video_list, list) and len(video_list) > 0:
-                download_link = video_list[0]
-            elif isinstance(video_list, str):
-                download_link = video_list
-            else:
-                download_link = None
+        if not dl_link:
+             return render(request, 'downloader/home.html', {'error': _("Посилання на файл відсутнє.")})
 
-            if not download_link:
-                if data.get("images_count", 0) > 0:
-                    messages.error(request, _("Вибачте, завантаження фото-слайдшоу поки не підтримується."))
-                else:
-                    messages.error(request, _("Не вдалося знайти посилання на відеофайл."))
-                return render(request, 'downloader/home.html')
+        # Збереження в БД
+        if request.user.is_authenticated:
+            try:
+                def clean(val, limit):
+                    s = str(val[0]) if isinstance(val, list) else str(val)
+                    return s[:limit]
 
-            # Завантажуємо відео у пам'ять
-            video_content = requests.get(download_link).content
-            
-            # --- РОБОТА З БАЗОЮ ДАНИХ (Нормалізація) ---
-            if request.user.is_authenticated:
-                # 1. Витягуємо дані (Автор, Назва, Обкладинка)
-                # API повертає списки ['текст'], тому беремо [0] елемент
-                
-                author_raw = data.get("author", ["Unknown"])
-                author_name = author_raw[0] if isinstance(author_raw, list) and author_raw else str(author_raw)
+                author = clean(data.get("author", "Unknown"), 490)
+                title = clean(data.get("description", "Video"), 990)
+                cover = clean(data.get("cover", ""), 990)
 
-                desc_raw = data.get("description", [])
-                title = desc_raw[0] if isinstance(desc_raw, list) and desc_raw else str(desc_raw)
-                if not title: title = "TikTok Video"
-
-                cover_raw = data.get("cover", [])
-                cover_url = cover_raw[0] if isinstance(cover_raw, list) and cover_raw else str(cover_raw)
-
-                # 2. Створюємо або беремо існуючого Автора
-                author_obj, _created = TikTokAuthor.objects.get_or_create(
-                    username=author_name
-                )
-
-                # 3. Створюємо або беремо існуюче Відео
-                # update_or_create зручно, якщо назва відео змінилася, але url той самий
-                video_obj, _created = TikTokVideo.objects.update_or_create(
+                a_obj, _ = TikTokAuthor.objects.get_or_create(username=author)
+                v_obj, _ = TikTokVideo.objects.update_or_create(
                     original_url=video_url,
-                    defaults={
-                        'title': title[:490], # Обрізаємо до ліміту БД
-                        'author': author_obj,
-                        'cover_image': cover_url
-                    }
+                    defaults={'title': title, 'author': a_obj, 'cover_image': cover}
                 )
+                DownloadHistory.objects.create(user=request.user, video=v_obj)
+            except Exception as e:
+                print(f"DB Save Error: {e}")
 
-                # 4. Записуємо факт завантаження в історію
-                DownloadHistory.objects.create(
-                    user=request.user,
-                    video=video_obj
-                )
+        # Стрімінг
+        file_resp = requests.get(dl_link, stream=True, timeout=20)
+        
+        def stream():
+            for chunk in file_resp.iter_content(chunk_size=8192):
+                if chunk: yield chunk
 
-            # Віддаємо файл
-            response = HttpResponse(video_content, content_type="video/mp4")
-            response['Content-Disposition'] = 'attachment; filename="tiktok_video.mp4"'
-            return response
+        resp = StreamingHttpResponse(stream(), content_type=content_type)
+        resp['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return resp
 
-        except Exception as e:
-            print(f"Error: {e}")
-            messages.error(request, _("Сталася технічна помилка при завантаженні."))
-            return render(request, 'downloader/home.html')
+    except Exception as e:
+        print(f"Error: {e}")
+        return render(request, 'downloader/home.html', {'error': _("Помилка завантаження")})
 
-    return render(request, 'downloader/home.html')
-
-# --- КАБІНЕТ ---
+# ... Cabinet View і Logout залишаються без змін ...
+# (Я не дублюю їх, щоб не займати місце, залиште як були в минулій версії)
 @login_required
 def cabinet_view(request):
-    # select_related оптимізує запит до БД (робить JOIN таблиць)
-    history = DownloadHistory.objects.filter(user=request.user).select_related('video', 'video__author').order_by('-download_date')
-    
-    total_downloads = history.count()
-    
-    context = {
-        'history': history,
-        'total_downloads': total_downloads
-    }
-    return render(request, 'downloader/cabinet.html', context)
+    from .models import UserProfile
+    history = DownloadHistory.objects.filter(user=request.user).select_related('video', 'video__author').order_by('-download_date')[:50]
+    total = DownloadHistory.objects.filter(user=request.user).count()
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    bot_link = f"https://t.me/TikRip_Bot?start={profile.connect_token}"
+    is_linked = profile.telegram_id is not None
+    return render(request, 'downloader/cabinet.html', {'history': history, 'total_downloads': total, 'bot_link': bot_link, 'is_telegram_linked': is_linked})
 
-# --- ВИХІД (Щоб не було помилки 405) ---
 def custom_logout_view(request):
     logout(request)
     return render(request, 'downloader/logout.html')

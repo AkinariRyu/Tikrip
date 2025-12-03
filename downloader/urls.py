@@ -5,7 +5,6 @@ from . import views
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
-    # ТУТ НЕ МАЄ БУТИ include('downloader.urls') !!!
     
     path('', views.home_view, name='home'),
     path('cabinet/', views.cabinet_view, name='cabinet'),

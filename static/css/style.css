@@ -95,7 +95,7 @@ body {
 }
 
 /* --- INPUTS --- */
-input[type="url"], input[type="text"], input[type="password"] {
+input[type="url"], input[type="text"], input[type="password"], input[type="email"] {
     width: 100%;
     padding: 18px;
     background: #000;

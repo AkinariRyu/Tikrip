@@ -9,10 +9,12 @@ attrs==25.4.0
 beautifulsoup4==4.14.2
 certifi==2025.10.5
 charset-normalizer==3.4.3
+click==8.3.1
 dj-database-url==3.0.1
 Django==5.2.7
 frozenlist==1.8.0
 gunicorn==23.0.0
+h11==0.16.0
 idna==3.10
 magic-filter==1.0.12
 multidict==6.7.0
@@ -30,6 +32,6 @@ sqlparse==0.5.3
 typing-inspection==0.4.2
 typing_extensions==4.15.0
 urllib3==2.5.0
+uvicorn==0.38.0
+whitenoise==6.11.0
 yarl==1.22.0
-uvicorn[standard]
-whitenoise[brotli]

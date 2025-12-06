@@ -1,7 +1,4 @@
-version: '3.8'
-
 services:
-  # --- БАЗА ДАНИХ ---
   db:
     image: postgres:15
     volumes:

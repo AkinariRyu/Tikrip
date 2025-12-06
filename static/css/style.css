@@ -1,4 +1,3 @@
-/* static/css/style.css */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
 :root {
@@ -18,14 +17,12 @@ body {
     color: var(--text-main);
     font-family: 'Inter', sans-serif;
     margin: 0;
-    /* Важливо: прибираємо зайві відступи, щоб центрування було точним */
     padding-top: 70px; 
     min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
-/* --- LOGO --- */
 .logo {
     font-size: 1.8rem;
     font-weight: 800;
@@ -35,11 +32,11 @@ body {
 .logo-tik { color: #fff; }
 .logo-rip {
     background: var(--primary-gradient);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
-/* --- NAVBAR --- */
 .navbar {
     position: fixed;
     top: 0;
@@ -61,7 +58,6 @@ body {
     padding: 0 20px;
 }
 
-/* Для навбару окремий флекс */
 .nav-content {
     display: flex;
     justify-content: space-between;
@@ -82,30 +78,27 @@ body {
 }
 .nav-links a:hover { color: #fff; }
 
-/* --- HOME PAGE CENTERING (НОВЕ) --- */
-/* Цей клас робить магію центрування */
 .home-wrapper {
-    min-height: calc(100vh - 140px); /* Висота екрану мінус меню */
+    min-height: calc(100vh - 140px);
     display: flex;
     flex-direction: column;
-    justify-content: center; /* Центр по вертикалі */
-    align-items: center;     /* Центр по горизонталі */
+    justify-content: center;
+    align-items: center;
     text-align: center;
     width: 100%;
 }
 
-/* --- INPUTS --- */
 input[type="url"], input[type="text"], input[type="password"], input[type="email"] {
     width: 100%;
     padding: 18px;
     background: #000;
     border: 2px solid var(--border-color);
-    border-radius: 50px; /* Круглі краї як в Google */
+    border-radius: 50px;
     color: #fff;
     font-size: 1.2rem;
     transition: all 0.3s;
     box-sizing: border-box;
-    text-align: center; /* ТЕКСТ ПО ЦЕНТРУ */
+    text-align: center;
     margin-bottom: 20px;
 }
 input:focus {
@@ -114,7 +107,6 @@ input:focus {
     box-shadow: 0 0 20px rgba(255, 0, 80, 0.2);
 }
 
-/* --- BUTTONS --- */
 .btn {
     display: inline-block;
     padding: 15px 40px;
@@ -134,7 +126,6 @@ input:focus {
     box-shadow: 0 0 25px rgba(0, 242, 234, 0.4);
 }
 
-/* --- CARD (Використовується для Login/Register/Cabinet) --- */
 .card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -142,11 +133,10 @@ input:focus {
     padding: 40px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.5);
     width: 100%;
-    max-width: 500px; /* Обмеження ширини */
+    max-width: 500px;
     margin: 20px auto;
 }
 
-/* --- GRID HISTORY --- */
 .history-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -162,7 +152,6 @@ input:focus {
 }
 .history-item a { color: var(--accent-blue); text-decoration: none; }
 
-/* --- LOADER --- */
 .loader {
     border: 4px solid rgba(255,255,255,0.1);
     border-left-color: var(--accent-pink);

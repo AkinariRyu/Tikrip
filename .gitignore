@@ -1,4 +1,3 @@
-# --- Django Core ---
 *.log
 *.pot
 *.pyc
@@ -8,20 +7,15 @@ db.sqlite3
 media
 staticfiles
 
-# --- Environment Variables (СЕКРЕТИ) ---
 .env
 .env.local
 
-# --- Virtual Environment ---
 venv/
 env/
 .venv/
 
-# --- Docker ---
-# Ми хочемо зберегти Dockerfile, але не тимчасові файли
 .docker/
 
-# --- IDE Settings ---
 .vscode/
 .idea/
 *.swp

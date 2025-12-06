@@ -1,4 +1,3 @@
-# downloader/models.py
 from django.db import models
 from django.contrib.auth.models import User
 import uuid
@@ -11,15 +10,12 @@ class UserProfile(models.Model):
     def __str__(self): return self.user.username
 
 class TikTokAuthor(models.Model):
-    # Збільшили до 500 символів
     username = models.CharField(max_length=500, unique=True, db_index=True)
     def __str__(self): return self.username
 
 class TikTokVideo(models.Model):
     author = models.ForeignKey(TikTokAuthor, on_delete=models.CASCADE, related_name='videos', null=True)
-    # Збільшили до 2000 символів (посилання бувають дуже довгі)
     original_url = models.URLField(max_length=2000, unique=True, db_index=True)
-    # Назву до 1000 символів
     title = models.CharField(max_length=1000, blank=True, null=True)
     cover_image = models.URLField(blank=True, null=True, max_length=1000)
     created_at = models.DateTimeField(auto_now_add=True)

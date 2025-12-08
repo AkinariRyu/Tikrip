@@ -1,163 +1,140 @@
-# downloader/management/commands/runbot.py
-
-import telebot
+import asyncio
 import os
-import requests
+import aiohttp
+import re
 from django.core.management.base import BaseCommand
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from asgiref.sync import sync_to_async
+
+from aiogram import Bot, Dispatcher, types, F
+from aiogram.filters import Command as Cmd
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, BufferedInputFile, ReplyKeyboardRemove
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.storage.memory import MemoryStorage
+
 from downloader.models import TikTokVideo, TikTokAuthor, DownloadHistory, UserProfile
 from dotenv import load_dotenv
-from telebot import types
 
 load_dotenv()
 
+class AuthState(StatesGroup):
+    login = State()
+    password = State()
+    is_register = State()
+
+@sync_to_async
+def get_user_by_tg(tg_id):
+    try: return UserProfile.objects.get(telegram_id=str(tg_id)).user
+    except: return None
+
+@sync_to_async
+def create_user(username, password, tg_id):
+    if User.objects.filter(username=username).exists(): return None
+    u = User.objects.create_user(username, password=password)
+    UserProfile.objects.create(user=u, telegram_id=str(tg_id))
+    return u
+
+@sync_to_async
+def login_user(username, password, tg_id):
+    u = authenticate(username=username, password=password)
+    if u:
+        UserProfile.objects.get_or_create(user=u, defaults={'telegram_id': str(tg_id)})
+        p = u.profile
+        p.telegram_id = str(tg_id)
+        p.save()
+    return u
+
+@sync_to_async
+def logout_user(tg_id):
+    UserProfile.objects.filter(telegram_id=str(tg_id)).delete()
+
+@sync_to_async
+def save_history(user, url, data):
+    def clean(val, limit): return (str(val[0]) if isinstance(val, list) else str(val))[:limit]
+    author = clean(data.get("author", "U"), 490)
+    title = clean(data.get("description", "V"), 990)
+    
+    a_obj, _ = TikTokAuthor.objects.get_or_create(username=author)
+    v_obj, _ = TikTokVideo.objects.update_or_create(
+        original_url=url, defaults={'title': title, 'author': a_obj}
+    )
+    if user:
+        DownloadHistory.objects.create(user=user, video=v_obj)
+        return True
+    return False
+
+TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+bot = Bot(token=TOKEN)
+dp = Dispatcher(storage=MemoryStorage())
+
+def get_kb(user):
+    kb = []
+    if user:
+        kb.append([KeyboardButton(text=f"👤 {user.username}"), KeyboardButton(text="🚪 Вийти")])
+    else:
+        kb.append([KeyboardButton(text="🔐 Вхід"), KeyboardButton(text="📝 Реєстрація")])
+    kb.append([KeyboardButton(text="❓ Допомога")])
+    return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
+
+@dp.message(Cmd("start"))
+async def start(m: types.Message):
+    user = await get_user_by_tg(m.chat.id)
+    await m.answer("👋 <b>TikRip Bot</b>\nКидай посилання!", parse_mode="HTML", reply_markup=get_kb(user))
+
+@dp.message(F.text.in_({"📝 Реєстрація", "🔐 Вхід"}))
+async def auth_start(m: types.Message, state: FSMContext):
+    await state.update_data(is_reg=(m.text == "📝 Реєстрація"))
+    await m.answer("Введіть <b>Логін</b>:", parse_mode="HTML", reply_markup=ReplyKeyboardRemove())
+    await state.set_state(AuthState.login)
+
+@dp.message(AuthState.login)
+async def auth_login(m: types.Message, state: FSMContext):
+    await state.update_data(login=m.text)
+    await m.answer("Введіть <b>Пароль</b>:", parse_mode="HTML")
+    await state.set_state(AuthState.password)
+
+@dp.message(AuthState.password)
+async def auth_pass(m: types.Message, state: FSMContext):
+    data = await state.get_data()
+    if data['is_reg']:
+        user = await create_user(data['login'], m.text, m.chat.id)
+        msg = "✅ Створено!" if user else "❌ Логін зайнятий."
+    else:
+        user = await login_user(data['login'], m.text, m.chat.id)
+        msg = "✅ Вхід успішний!" if user else "❌ Невірні дані."
+    
+    await m.answer(msg, reply_markup=get_kb(user))
+    await state.clear()
+
+@dp.message(F.text == "🚪 Вийти")
+async def logout_h(m: types.Message):
+    await logout_user(m.chat.id)
+    await m.answer("Вийшли.", reply_markup=get_kb(None))
+
+@dp.message(F.text.contains("tiktok.com"))
+async def download(m: types.Message):
+    user = await get_user_by_tg(m.chat.id)
+    status = await m.answer("⏳ ...")
+    try:
+        async with aiohttp.ClientSession() as sess:
+            API_KEY = os.getenv("RAPID_API_KEY")
+            API_HOST = os.getenv("RAPID_API_HOST")
+            async with sess.get(os.getenv("RAPID_API_URL"), headers={"x-rapidapi-key": API_KEY, "x-rapidapi-host": API_HOST}, params={"url": m.text}) as r:
+                data = await r.json()
+            
+            link = data.get("hdplay") or data.get("play") or data["video"][0]
+            async with sess.get(link) as f:
+                b = await f.read()
+            
+            saved = await save_history(user, m.text, data)
+            await status.delete()
+            await m.answer_video(BufferedInputFile(b, "video.mp4"), caption="✅ Збережено" if saved else "⚠️ Анонімно", reply_markup=get_kb(user))
+    except Exception as e:
+        await status.edit_text("Помилка.")
+
 class Command(BaseCommand):
-    help = 'Запуск Telegram бота'
-
+    help = 'Run Bot'
     def handle(self, *args, **options):
-        TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-        API_KEY = os.getenv("RAPID_API_KEY")
-        API_HOST = os.getenv("RAPID_API_HOST")
-        API_URL = os.getenv("RAPID_API_URL")
-
-        if not TOKEN or not API_KEY:
-            print("❌ ПОМИЛКА: Не знайдено токени в .env файлі!")
-            return
-
-        bot = telebot.TeleBot(TOKEN)
-        print("Бот TikRip запущено...")
-
-        # --- СТАРТ І МЕНЮ ---
-        @bot.message_handler(commands=['start'])
-        def send_welcome(message):
-            if UserProfile.objects.filter(telegram_id=str(message.chat.id)).exists():
-                bot.send_message(message.chat.id, "👋 Привіт! Ти вже в системі. Кидай посилання!")
-                return
-
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-            markup.add(types.KeyboardButton("📝 Реєстрація"), types.KeyboardButton("🔗 Підключити існуючий акаунт"))
-            
-            bot.send_message(message.chat.id, "Привіт! Обери дію:", reply_markup=markup)
-
-        # --- РЕЄСТРАЦІЯ ---
-        @bot.message_handler(func=lambda m: m.text == "📝 Реєстрація")
-        def reg_start(message):
-            msg = bot.send_message(message.chat.id, "Введіть новий <b>Логін</b>:", parse_mode="HTML")
-            bot.register_next_step_handler(msg, reg_login)
-
-        def reg_login(message):
-            username = message.text.strip()
-            if User.objects.filter(username=username).exists():
-                bot.send_message(message.chat.id, "❌ Логін зайнятий. Тисни /start")
-                return
-            msg = bot.send_message(message.chat.id, "Введіть <b>Пароль</b>:", parse_mode="HTML")
-            bot.register_next_step_handler(msg, reg_password, username)
-
-        def reg_password(message, username):
-            try:
-                user = User.objects.create_user(username=username, password=message.text.strip())
-                UserProfile.objects.create(user=user, telegram_id=str(message.chat.id))
-                bot.send_message(message.chat.id, "✅ Реєстрація успішна! Кидай відео.", reply_markup=types.ReplyKeyboardRemove())
-            except Exception as e:
-                bot.send_message(message.chat.id, f"Помилка: {e}")
-
-        # --- ВХІД ---
-        @bot.message_handler(func=lambda m: m.text == "🔗 Підключити існуючий акаунт")
-        def login_start(message):
-            msg = bot.send_message(message.chat.id, "Введіть ваш <b>Логін</b>:", parse_mode="HTML")
-            bot.register_next_step_handler(msg, login_username)
-
-        def login_username(message):
-            msg = bot.send_message(message.chat.id, "Введіть ваш <b>Пароль</b>:", parse_mode="HTML")
-            bot.register_next_step_handler(msg, login_password, message.text.strip())
-
-        def login_password(message, username):
-            user = authenticate(username=username, password=message.text.strip())
-            if user:
-                UserProfile.objects.get_or_create(user=user, defaults={'telegram_id': str(message.chat.id)})
-                # Оновлюємо ID якщо профіль вже був
-                p = user.profile
-                p.telegram_id = str(message.chat.id)
-                p.save()
-                bot.send_message(message.chat.id, f"✅ Вхід успішний, {user.username}!", reply_markup=types.ReplyKeyboardRemove())
-            else:
-                bot.send_message(message.chat.id, "❌ Невірні дані. /start")
-
-        # --- ОБРОБКА ВІДЕО (ТУТ ВІДБУВАЄТЬСЯ СКАЧУВАННЯ) ---
-        @bot.message_handler(func=lambda message: True)
-        def handle_video(message):
-            url = message.text.strip()
-            
-            if "tiktok.com" not in url:
-                bot.reply_to(message, "Це не TikTok посилання. 🧐")
-                return
-
-            # Перевірка авторизації
-            try:
-                profile = UserProfile.objects.get(telegram_id=str(message.chat.id))
-                user = profile.user
-            except UserProfile.DoesNotExist:
-                bot.send_message(message.chat.id, "🔒 Спочатку увійдіть або зареєструйтесь! /start")
-                return
-
-            status_msg = bot.reply_to(message, "🔎 Шукаю відео...")
-
-            try:
-                # 1. Отримуємо пряме посилання через API
-                querystring = {"url": url}
-                headers = {"x-rapidapi-key": API_KEY, "x-rapidapi-host": API_HOST}
-                response = requests.get(API_URL, headers=headers, params=querystring)
-                data = response.json()
-
-                if "video" not in data:
-                    bot.edit_message_text("❌ API не повернуло відео.", message.chat.id, status_msg.message_id)
-                    return
-
-                video_list = data["video"]
-                download_link = video_list[0] if isinstance(video_list, list) else video_list
-
-                # 2. СКАЧУВАННЯ (ОСЬ ЦЕЙ МОМЕНТ)
-                bot.edit_message_text("⬇️ Завантажую файл на сервер...", message.chat.id, status_msg.message_id)
-                
-                # requests.get().content завантажує байти відео в змінну video_content
-                video_content = requests.get(download_link).content
-
-                # 3. ЗБЕРЕЖЕННЯ В БД
-                bot.edit_message_text("💾 Записую в Базу Даних...", message.chat.id, status_msg.message_id)
-                
-                author_name = "Unknown"
-                if "author" in data:
-                     author_raw = data["author"]
-                     author_name = author_raw[0] if isinstance(author_raw, list) else str(author_raw)
-                
-                title = "TikTok Video"
-                if "description" in data:
-                    desc_raw = data["description"]
-                    title = desc_raw[0] if isinstance(desc_raw, list) else str(desc_raw)
-
-                author_obj, _ = TikTokAuthor.objects.get_or_create(username=author_name)
-                video_obj, _ = TikTokVideo.objects.update_or_create(
-                    original_url=url,
-                    defaults={'title': title[:490], 'author': author_obj}
-                )
-                DownloadHistory.objects.create(user=user, video=video_obj)
-
-                # 4. ВІДПРАВКА В ТЕЛЕГРАМ
-                bot.edit_message_text("🚀 Відправляю тобі...", message.chat.id, status_msg.message_id)
-                
-                caption = f"🎬 {title}\n👤 {author_name}"
-                markup = types.InlineKeyboardMarkup()
-                markup.add(types.InlineKeyboardButton("📂 Мій Кабінет", url="http://127.0.0.1:8000/cabinet/"))
-
-                # bot.send_video приймає байти (video_content) і відправляє їх як файл
-                bot.send_video(message.chat.id, video_content, caption=caption, reply_markup=markup)
-                
-                # Видаляємо повідомлення про статус
-                bot.delete_message(message.chat.id, status_msg.message_id)
-
-            except Exception as e:
-                print(f"Error: {e}")
-                bot.edit_message_text(f"Помилка: {e}", message.chat.id, status_msg.message_id)
-
-        bot.infinity_polling()
+        asyncio.run(dp.start_polling(bot))

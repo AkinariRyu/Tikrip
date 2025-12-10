@@ -8,11 +8,11 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-me-locally')
+SECRET_KEY = 'django-insecure-^5%rc7()ax_+_9_rhnpa+4@i-9yc7-f5bj+ntb3sw1sh8p7*4#'
 
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = True
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
+ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'downloader',
@@ -57,8 +57,9 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='sqlite:///db.sqlite3',
-        conn_max_age=600
+        default='postgres://tikrip_user:tikrip_pass@localhost:5432/tikrip_db',
+        conn_max_age=600,
+        ssl_require=False
     )
 }
 

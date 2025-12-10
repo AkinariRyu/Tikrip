@@ -64,7 +64,7 @@ def get_dashboard_data(user):
     counts = [s['count'] for s in stats]
     
     profile, _ = UserProfile.objects.get_or_create(user=user)
-    bot_link = f"https://t.me/TikRip_Bot?start={profile.connect_token}"
+    bot_link = f"https://t.me/TikRip_Bot?start={profile.connect_token}" # <--- Вставте свій юзернейм бота
     is_linked = profile.telegram_id is not None
     
     return history, total, dates, counts, bot_link, is_linked
